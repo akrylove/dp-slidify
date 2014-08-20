@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Exercise Correctness Prediction</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Exercise Correctness Prediction">
+  <meta name="author" content="akrylove">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Exercise Correctness Prediction</h1>
+    <h2>Predicting Exercise Mistake Type</h2>
+    <p>akrylove<br/>student</p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h3>Objective</h3>
+  </hgroup>
+  <article data-timings="">
+    <p>Find a regression model that predicts whether a dumbbell lifting exercise was performed correctly or which of the four mistake types was encountered.</p>
+
+<h3>Analysis</h3>
+
+<ol>
+<li>Load the data set and split it in into training and testing sets. </li>
+<li>Compress the training set and select features *.</li>
+<li>Build a Random Forest model with the training set using the selected features.</li>
+</ol>
+
+<pre><code class="r">inTrain &lt;- createDataPartition(y=data$classe, p=0.6, list=FALSE)
+training &lt;- data[inTrain,]; testing &lt;- data[-inTrain,]
+</code></pre>
+
+<pre><code class="r">model &lt;- randomForest(classe ~ ., data=training, proximity=TRUE
+                      , na.action=na.omit, keep.forest=TRUE, ntree=100)
+</code></pre>
+
+<p>For compression and feature selection details, refer to <a href="http://akrylove.github.io/machine-learning/CourseProject-Final.html">http://akrylove.github.io/machine-learning/CourseProject-Final.html</a>.</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-2" style="background:;">
+  <hgroup>
+    <h3>Model Evaluation</h3>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Low (6%) out of sample error rate - good accuracy.</li>
+<li>Confusion matrix with 3% to 10% misclassification rate - not overfitted.</li>
+</ul>
+
+<pre><code>## 
+## Call:
+##  randomForest(formula = classe ~ ., data = training, proximity = TRUE,      keep.forest = TRUE, ntree = 100, na.action = na.omit) 
+##                Type of random forest: classification
+##                      Number of trees: 100
+## No. of variables tried at each split: 4
+## 
+##         OOB estimate of  error rate: 6.84%
+## Confusion matrix:
+##      A    B    C    D    E class.error
+## A 3192   33   60   58    5     0.04659
+## B  103 2050   87   18   21     0.10048
+## C   46   71 1904   28    5     0.07303
+## D   51   15   98 1754   12     0.09119
+## E    5   38   24   28 2070     0.04388
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <article data-timings="">
+    <p>Run the model on the test set and evaluate its accuracy.</p>
+
+<pre><code class="r">pred &lt;- predict(model,testing); testing$predRight &lt;- pred==testing$classe
+table(pred,testing$classe)
+</code></pre>
+
+<pre><code>##     
+## pred    A    B    C    D    E
+##    A 2156   48   32   37    3
+##    B   16 1401   42    2   30
+##    C   20   54 1285   54   14
+##    D   40    7    7 1182   16
+##    E    0    8    2   11 1379
+</code></pre>
+
+<p><b>Try it yourself at <a href="http://akrylove.shinyapps.io/dataprod/">http://akrylove.shinyapps.io/dataprod/</a> </b></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h3>Conclusion</h3>
+  </hgroup>
+  <article data-timings="">
+    <p>Using a Random Forest method on 16 acceleration-related variables, we can create a model that has over 90% accuracy rate of detecting whether a dumbbell was lifted correctly and, if it was not, what type of five known mistakes was made.  The model is not intelligent enough to catch mistakes of types other than the five captured in the data set. Neither can the model determine whether more than one mistake was made (for example, accellerating both belt and arm too fast).  We also do not know how well the model scales beyond the original set of 19,000 observations.  However, for data sets under 20,000 observations where each observation has zero or one exercise mistakes, the model is 94% accurate predicting whether the exercise was performed correctly or which of the four known mistake types occured.</p>
+
+<h3>References</h3>
+
+<p><a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a>
+<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a>
+<a href="http://akrylove.github.io/machine-learning/CourseProject-Final">http://akrylove.github.io/machine-learning/CourseProject-Final</a>
+<a href="http://akrylove.shinyapps.io/dataprod/">http://akrylove.shinyapps.io/dataprod/</a></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='Objective'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Model Evaluation'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title=''>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Conclusion'>
+         4
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
